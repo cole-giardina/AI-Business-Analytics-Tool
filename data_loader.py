@@ -35,7 +35,7 @@ def load_and_clean(file) -> tuple[pd.DataFrame, dict]:
     # Auto-detect and parse date columns
     date_col = _detect_date_column(df)
     if date_col:
-        df[date_col] = pd.to_datetime(df[date_col], infer_datetime_format=True, errors="coerce")
+        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
         df.sort_values(date_col, inplace=True)
         df.reset_index(drop=True, inplace=True)
         # Re-run date detection now that column is parsed
@@ -52,6 +52,8 @@ def load_and_clean(file) -> tuple[pd.DataFrame, dict]:
 
     # --- Summary dict ---
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
+    null_counts = df.isnull().sum()
+    missing_pct = (null_counts / len(df) * 100).round(2).to_dict() if len(df) else {}
     summary = {
         "original_rows": original_shape[0],
         "original_cols": original_shape[1],
@@ -60,7 +62,9 @@ def load_and_clean(file) -> tuple[pd.DataFrame, dict]:
         "numeric_columns": numeric_cols,
         "categorical_columns": df.select_dtypes(include="object").columns.tolist(),
         "date_column": date_col,
-        "null_counts": df.isnull().sum().to_dict(),
+        "null_counts": null_counts.to_dict(),
+        "missing_pct": missing_pct,
+        "duplicate_rows": int(df.duplicated().sum()),
         "dtypes": df.dtypes.astype(str).to_dict(),
         "describe": df[numeric_cols].describe().to_dict() if numeric_cols else {},
     }
@@ -80,7 +84,7 @@ def _detect_date_column(df: pd.DataFrame) -> str | None:
         if any(kw in col_lower for kw in date_keywords):
             sample = df[col].dropna().head(10).astype(str)
             try:
-                pd.to_datetime(sample, infer_datetime_format=True, errors="raise")
+                pd.to_datetime(sample, errors="raise")
                 return col
             except Exception:
                 continue

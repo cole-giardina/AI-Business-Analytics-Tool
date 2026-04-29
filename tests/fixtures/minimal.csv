@@ -1,0 +1,6 @@
+order_date,region,category,sales,profit
+2023-01-01,East,A,100,10
+2023-02-01,East,A,150,12
+2023-03-01,West,B,200,8
+2023-04-01,West,B,180,9
+2023-05-01,East,B,90,3

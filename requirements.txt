@@ -3,3 +3,6 @@ matplotlib
 seaborn
 streamlit
 anthropic
+plotly
+numpy
+pytest
